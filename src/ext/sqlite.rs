@@ -3,6 +3,7 @@ use sqlite::{Connection, State};
 use crate::crawler::{GenericStoreItem, ItemsCrawler};
 use crate::item::Item;
 use crate::store::Store;
+use crate::utils::MAX_BATCH_ITEMS;
 
 /// Init needed db which store items data
 fn init_items_table(conn: &Connection) {
@@ -106,7 +107,7 @@ impl ItemsCrawler<Store<Connection>> {
         let mut last_item_id = self.client.get_last_item().unwrap();
         let mut counter = 0;
         let mut items: Vec<Item> = vec![];
-        while (latest_item_id > last_item_id) && counter < 2 {
+        while (latest_item_id > last_item_id) && counter < (MAX_BATCH_ITEMS).clone() {
             let res = self.fetch_item(last_item_id).unwrap();
             let item  = Item::from(res.to_string());
             items.push(item);
@@ -124,6 +125,7 @@ mod tests {
     use crate::crawler::{GenericStoreItem, ItemsCrawler};
     use crate::hub::NewsHub;
     use crate::store::Store;
+    use crate::utils::CRAWLER_HUB;
 
     fn mock_sqlite_memory() -> Store<Connection> {
         let url = format!(":memory:");
@@ -137,7 +139,7 @@ mod tests {
 
     #[test]
     fn test_run_one() {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let store_client = mock_tmp_db();
         let mut crawler = ItemsCrawler::new(hub, store_client);
         let _ = crawler.run_one();
@@ -145,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_run_many() {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let store_client = mock_tmp_db();
         let mut crawler = ItemsCrawler::new(hub, store_client);
         let _ = crawler.run_many();
@@ -153,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_run_many_insert_batch() {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let store_client = mock_tmp_db();
         let mut crawler = ItemsCrawler::new(hub, store_client);
         let _ = crawler.run_many_insert_batch();

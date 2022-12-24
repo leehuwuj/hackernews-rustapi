@@ -4,7 +4,7 @@ pub struct NewsHub {
     base_uri: String,
 }
 impl NewsHub {
-    pub fn new(base_uri: impl Into<String>) -> Self {
+    pub fn new(base_uri: &str) -> Self {
         Self {
             base_uri: base_uri.into(),
         }
