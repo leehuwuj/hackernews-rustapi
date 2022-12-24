@@ -1,4 +1,5 @@
 use crate::crawler::GenericStoreItem;
+use crate::item::Item;
 use crate::store::{Store};
 
 /// Wrap File into FileClient
@@ -26,7 +27,7 @@ impl GenericStoreItem<Store<FileClient>> for Store<FileClient> {
     fn get_last_item(&mut self) -> Result<i64, ()> {
         Ok(34103931i64)
     }
-    fn store_item(&mut self) {
+    fn store_item(&mut self, item: Item) {
         let _ = self.backend_client.base_path;
         todo!();
     }

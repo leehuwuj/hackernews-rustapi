@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::hub::NewsHub;
+use crate::item::Item;
 
 pub struct ItemsCrawler<StoreClient> {
     pub hub: Arc<NewsHub>,
@@ -11,7 +12,7 @@ pub struct ItemsCrawler<StoreClient> {
 /// Storing item data into generic Store
 pub trait GenericStoreItem<T> {
     fn get_last_item(&mut self) -> Result<i64, ()>;
-    fn store_item(&mut self);
+    fn store_item(&mut self, item: Item);
 }
 /// Generic crawl logic
 pub trait GenericCrawlerFlow<T> {
@@ -34,7 +35,6 @@ impl<StoreClient> ItemsCrawler<StoreClient> {
     }
     pub fn fetch_item(&mut self, item_id: i64) -> Result<String, ()> {
         let res = self.hub.fetch_item(item_id).unwrap();
-        println!("{:?}", res);
         Ok(res)
     }
 }

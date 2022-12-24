@@ -1,5 +1,6 @@
 use postgres::NoTls;
 use crate::crawler::{ItemsCrawler, GenericStoreItem};
+use crate::item::Item;
 use crate::store::Store;
 
 // Implement Store for postgres
@@ -22,7 +23,7 @@ impl GenericStoreItem<Store<postgres::Client>> for Store<postgres::Client> {
         };
         result
     }
-    fn store_item(&mut self) {
+    fn store_item(&mut self, item: Item) {
         todo!()
     }
 }
