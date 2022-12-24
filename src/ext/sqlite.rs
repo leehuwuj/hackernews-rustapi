@@ -122,7 +122,7 @@ impl ItemsCrawler<Store<Connection>> {
 #[cfg(test)]
 mod tests {
     use sqlite::{Connection, State};
-    use crate::crawler::{GenericStoreItem, ItemsCrawler};
+    use crate::crawler::{ItemsCrawler};
     use crate::hub::NewsHub;
     use crate::store::Store;
     use crate::utils::CRAWLER_HUB;
@@ -133,7 +133,7 @@ mod tests {
     }
 
     fn mock_tmp_db() -> Store<Connection> {
-        let url = format!("items.db");
+        let url = format!("resources/items.db");
         Store::<Connection>::new(&url)
     }
 
@@ -161,6 +161,7 @@ mod tests {
         let _ = crawler.run_many_insert_batch();
 
     }
+
     #[test]
     fn test_init_sql_store() {
         let store_client = mock_sqlite_memory();

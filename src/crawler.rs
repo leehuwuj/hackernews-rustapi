@@ -61,10 +61,11 @@ mod tests {
     use crate::crawler::ItemsCrawler;
     use crate::hub::NewsHub;
     use crate::store::Store;
+    use crate::utils::CRAWLER_HUB;
 
 
     fn mock_crawler() -> ItemsCrawler<postgres::Client> {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let url = format!("postgresql://{}:{}@{}:{}/{}",
                           "hackernews",
                           "hackernews",
@@ -95,7 +96,7 @@ mod tests {
     // Test crawler flow
     #[test]
     fn test_run_one() {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let url = format!("postgresql://{}:{}@{}:{}/{}",
                           "hackernews",
                           "hackernews",

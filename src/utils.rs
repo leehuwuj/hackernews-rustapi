@@ -1,5 +1,4 @@
 use std::env::var;
-use std::env::VarError;
 use lazy_static::lazy_static;
 
 fn env_or(name: &str, default: String) -> String {
@@ -15,7 +14,7 @@ lazy_static! {
         format!("https://hacker-news.firebaseio.com/v0/")
     );
     pub static ref MAX_BATCH_ITEMS: u16 = env_or(
-        "CRAWLER_HUB",
+        "MAX_BATCH_ITEMS",
         format!("10")
     ).parse::<u16>().unwrap();
 }

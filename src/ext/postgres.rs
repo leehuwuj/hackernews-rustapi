@@ -24,6 +24,7 @@ impl GenericStoreItem<Store<postgres::Client>> for Store<postgres::Client> {
         result
     }
     fn store_item(&mut self, item: Item) {
+        let _ = item;
         todo!()
     }
 }
@@ -45,11 +46,12 @@ mod tests {
     use crate::crawler::{GenericStoreItem, ItemsCrawler};
     use crate::hub::NewsHub;
     use crate::store::Store;
+    use crate::utils::CRAWLER_HUB;
 
     #[test]
     fn test_get_item_postgres() {
         // let mut crawler = mock_crawler();
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let url = format!("postgresql://{}:{}@{}:{}/{}",
                           "hackernews",
                           "hackernews",

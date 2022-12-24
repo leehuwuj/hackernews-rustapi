@@ -29,6 +29,7 @@ impl GenericStoreItem<Store<FileClient>> for Store<FileClient> {
     }
     fn store_item(&mut self, item: Item) {
         let _ = self.backend_client.base_path;
+        let _ = item;
         todo!();
     }
 }
@@ -39,14 +40,14 @@ mod tests {
     use crate::ext::file::FileClient;
     use crate::hub::NewsHub;
     use crate::store::Store;
+    use crate::utils::CRAWLER_HUB;
 
     #[test]
     fn test_get_item_file() {
-        let hub = NewsHub::new("https://hacker-news.firebaseio.com/v0/");
+        let hub = NewsHub::new(&**CRAWLER_HUB);
         let store_client  = Store::<FileClient>::new("/tmp/test");
         let mut crawler = ItemsCrawler::new(hub, store_client);
         let item = crawler.client.get_last_item();
         println!("{:?}", item);
-        // crawler.get
     }
 }
