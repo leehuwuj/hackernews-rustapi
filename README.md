@@ -9,3 +9,19 @@
   - [ ] File
 - [ ] Asynchronous API
 - [ ] Real-time event
+
+# How to?
+## Build:
+```shell
+cargo build
+```
+
+## Test:
+- Test specified module
+```shell
+cargo test ext::sqlite 
+```
+- or test all
+```shell
+cargo test
+```
