@@ -25,3 +25,13 @@ cargo test ext::sqlite
 ```shell
 cargo test
 ```
+
+## Run:
+- Store to Sqlite:
+```shell
+crawler --store sqlite --store-uri=<db/file/path>
+```
+- Store to Postgres:
+```shell
+crawler --store postgres --store-uri=<postgresql://uri>
+```

@@ -46,8 +46,10 @@ impl<T> GenericCrawlerFlow<T> for ItemsCrawler<T>
         let last_item_id = self.client.get_last_item().unwrap();
         if latest_item_id > last_item_id {
             let item = self.fetch_item(latest_item_id).unwrap();
+            println!("{:?}", item.to_string());
             self.client.store_item(item).unwrap();
         }
+        println!("Store 1 item into store!");
         Ok(())
     }
 }
