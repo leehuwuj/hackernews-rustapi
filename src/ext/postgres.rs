@@ -23,7 +23,7 @@ impl GenericStoreItem<Store<postgres::Client>> for Store<postgres::Client> {
         };
         result
     }
-    fn store_item(&mut self, item: Item) {
+    fn store_item(&mut self, item: Item) -> Result<bool, ()> {
         let _ = item;
         todo!()
     }

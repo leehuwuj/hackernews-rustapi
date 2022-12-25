@@ -27,7 +27,7 @@ impl GenericStoreItem<Store<FileClient>> for Store<FileClient> {
     fn get_last_item(&mut self) -> Result<i64, ()> {
         Ok(34103931i64)
     }
-    fn store_item(&mut self, item: Item) {
+    fn store_item(&mut self, item: Item) -> Result<bool, ()>{
         let _ = self.backend_client.base_path;
         let _ = item;
         todo!();

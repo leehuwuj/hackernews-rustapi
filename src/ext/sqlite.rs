@@ -52,9 +52,10 @@ impl GenericStoreItem<Store<Connection>> for Store<Connection> {
             State::Done => {Err(())}
         }
     }
-    fn store_item(&mut self, item: Item) {
+    fn store_item(&mut self, item: Item) -> Result<bool, ()> {
         let sql = format!("INSERT INTO `items` VALUES {}", item.to_string());
         self.backend_client.execute(sql).unwrap();
+        Ok(true)
     }
 }
 
@@ -72,29 +73,14 @@ impl Store<Connection> {
 
 // This implementation will override the GenericCrawlerFlow above
 impl ItemsCrawler<Store<Connection>> {
-    /// Run the crawler which get latest item in Hub and store to Postgres
-    pub fn run_one(&mut self) -> Result<String, ()> {
-        let latest_item_id = self.fetch_latest_item().unwrap();
-        let last_item_id = self.client.get_last_item().unwrap();
-        if latest_item_id > last_item_id {
-            let res = self.fetch_item(latest_item_id).unwrap();
-            let item  = Item::from(res.to_string());
-            self.client.store_item(item);
-        }
-
-        println!("Execute in SQLite");
-        println!("Last item: \t\t{:?}\nLatest item: \t{:?}", last_item_id, latest_item_id);
-        Ok("Generic!".to_string())
-    }
-
     pub fn run_many(&mut self) {
         let latest_item_id = self.fetch_latest_item().unwrap();
         let mut last_item_id = self.client.get_last_item().unwrap();
-        let mut counter = 0;
-        while (latest_item_id > last_item_id) && counter < 5 {
+        let mut counter: u16 = 0;
+        while (latest_item_id > last_item_id) && (counter < *MAX_BATCH_ITEMS) {
             let res = self.fetch_item(last_item_id).unwrap();
             let item  = Item::from(res.to_string());
-            self.client.store_item(item);
+            self.client.store_item(item).unwrap();
             last_item_id += 1;
             counter += 1;
         }
@@ -122,7 +108,7 @@ impl ItemsCrawler<Store<Connection>> {
 #[cfg(test)]
 mod tests {
     use sqlite::{Connection, State};
-    use crate::crawler::{ItemsCrawler};
+    use crate::crawler::{GenericCrawlerFlow, ItemsCrawler};
     use crate::hub::NewsHub;
     use crate::store::Store;
     use crate::utils::CRAWLER_HUB;
