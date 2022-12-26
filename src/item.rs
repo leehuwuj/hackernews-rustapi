@@ -34,13 +34,23 @@ impl From<String> for Item {
     }
 }
 
-impl ToString for Item {
-    fn to_string(&self) -> String {
+impl Item {
+    /// Parsed all item values into `()` sql query string
+    /// followed the order of item attributes
+    /// but not contains the INSERT INO... prefix
+    /// the string will safty wrapped in single quote
+    /// 
+    /// ex:\n
+    /// 
+    ///({id}, {deleted}, '{item_type}', '{who}', {time}, {dead}, '{kids:?}',
+    /// '{title}', '{content}', {score}, '{url}', {parent})",
+    pub fn to_sql_value(&self) -> String {
+        // safety process single quote
         let fmt_str = |the_str: String| the_str.replace("'", "''");
+        // convert bool into number
         let fmt_bool = |the_bool: bool| {
             match the_bool { true => 1, _ => 0 }
         };
-
         format!(
             "({id}, {deleted}, '{item_type}', '{who}', {time}, {dead}, '{kids:?}', \
             '{title}', '{content}', {score}, '{url}', {parent})",
@@ -56,6 +66,12 @@ impl ToString for Item {
             score=self.score,
             url=fmt_str(self.url.to_string()),
             parent=self.parent
-        )
+        )       
+    }
+}
+
+impl ToString for Item {
+    fn to_string(&self) -> String {
+        self.to_sql_value()
     }
 }

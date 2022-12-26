@@ -1,6 +1,9 @@
-use std::sync::Arc;
+use std::sync::{Arc, mpsc};
+use std::time::Duration;
 use crate::hub::NewsHub;
 use crate::item::Item;
+use crate::utils::MAX_BATCH_ITEMS;
+use tokio::runtime;
 
 pub struct ItemsCrawler<StoreClient> {
     pub hub: Arc<NewsHub>,
@@ -16,6 +19,7 @@ pub trait GenericStoreItem<T> {
 /// Generic crawl logic
 pub trait GenericCrawlerFlow<T> {
     fn run_one(&mut self) -> Result<(), ()>;
+    fn run_sync_data(&mut self);
 }
 
 // Default Implementations
@@ -35,6 +39,45 @@ impl<StoreClient> ItemsCrawler<StoreClient> {
         let res = self.hub.fetch_item(item_id).unwrap();
         Ok(Item::from(res))
     }
+    pub fn fetch_items_async(&self, ids: Vec<i64>, rt: tokio::runtime::Runtime) -> Vec<Item> {
+        let (s, r) = mpsc::channel();
+        let ids_cnt = ids.len();
+        
+        for i in ids {
+            let sender = s.clone();
+            let hub = self.hub.clone();
+            rt.spawn(async move {
+                match hub.fetch_item_async(i).await {
+                    Ok(response) => {
+                        if response.len() < 10 {
+                            println!("invalid response");
+                            let _ = sender.send(None);
+                        } else {
+                            let item = Item::from(response);
+                            let _ = sender.send(Some(item));
+                        }
+                    }
+                    Err(_) => {
+                        let _ = sender.send(None);
+                    }
+                }
+            });
+        }
+
+        let mut res = vec![];
+        for _ in 0..ids_cnt {
+            match r.recv_timeout(Duration::from_secs(5)) {
+                Ok(item) => {
+                    if let Some(item) = item {
+                        res.push(item);
+                    }
+                }
+                Err(_) => continue 
+            }
+        }
+
+        res
+    }
 }
 
 impl<T> GenericCrawlerFlow<T> for ItemsCrawler<T>
@@ -52,6 +95,30 @@ impl<T> GenericCrawlerFlow<T> for ItemsCrawler<T>
         println!("Store 1 item into store!");
         Ok(())
     }
+
+    fn run_sync_data(&mut self) {
+        let latest_item = self.fetch_latest_item().unwrap();
+        let last_item = self.client.get_last_item().unwrap();
+        let max_item_per_batch = *MAX_BATCH_ITEMS as i64;
+        let mut max_item_id = last_item;
+        while latest_item > max_item_id {
+            // Create single async runtime
+            let rt = runtime::Builder::new_multi_thread()
+                                .worker_threads(1)
+                                .enable_all()
+                                .build()
+                                .unwrap();
+            let to_item_id = std::cmp::min(
+                max_item_id + max_item_per_batch, 
+                latest_item);
+            let batched: Vec<i64> = (max_item_id+1..to_item_id+1).into_iter().collect();
+            let res = self.fetch_items_async(batched, rt);
+            max_item_id = to_item_id;
+            res.into_iter().for_each(|i| {self.client.store_item(i).unwrap();});
+            // res.into_iter().for_each(|i| println!("Item: {}", i.id));
+            println!("max item: {}", max_item_id);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -64,7 +131,7 @@ mod tests {
     /// Create crawler for item which using sqlite memory as storage
     fn mock_crawler() -> ItemsCrawler<Store<sqlite::Connection>> {
         let hub = NewsHub::new(&**CRAWLER_HUB);
-        let store = Store::<sqlite::Connection>::new(":memory:");
+        let store = Store::<sqlite::Connection>::new("resources/items.db");
         ItemsCrawler::new(hub, store)
     }
 
@@ -89,5 +156,11 @@ mod tests {
     fn test_run_one() {
         let mut crawler = mock_crawler();
         let _ = crawler.run_one();
+    }
+
+    #[test]
+    fn test_run_async() {
+        let mut crawler = mock_crawler();
+        let _ = crawler.run_sync_data(); 
     }
 }

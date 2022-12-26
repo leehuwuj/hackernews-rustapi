@@ -4,9 +4,9 @@ WORKDIR /tmp/rbuild
 
 # Rebuild package from Cargo.toml
 COPY Cargo.* .
-RUN mkdir -p src && touch src/main.rs
-RUN cargo update
-RUN rm -rf src
+RUN mkdir -p src && echo "fn main() {}" > src/main.rs
+RUN cargo build
+RUN rm -rf src/main.rs
 # Copy source code and build them
 COPY src src
 RUN cargo build --release

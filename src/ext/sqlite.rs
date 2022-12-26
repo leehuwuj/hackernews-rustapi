@@ -53,7 +53,7 @@ impl GenericStoreItem<Store<Connection>> for Store<Connection> {
         }
     }
     fn store_item(&mut self, item: Item) -> Result<bool, ()> {
-        let sql = format!("INSERT INTO `items` VALUES {}", item.to_string());
+        let sql = format!("INSERT INTO `items` VALUES {}", item.to_sql_value());
         self.backend_client.execute(sql).unwrap();
         Ok(true)
     }
@@ -63,9 +63,10 @@ impl Store<Connection> {
     fn store_items_batch(&mut self, items: Vec<Item>) {
         let batched_values = items.iter()
             .fold("".to_string(),
-                |i1, i2|
-                    format!("{},{}", i1.to_string(), i2.to_string()))
-            .split_at(1).1.to_string();
+                |i1, i2| 
+                format!("{},{}", i1.to_string(), i2.to_sql_value()))
+            .split_at(1).1 // Remove surplus of delimeters in the first time folding
+            .to_string();
         let sql = format!("INSERT INTO `items` VALUES {}", batched_values.to_string());
         self.backend_client.execute(sql).unwrap();
     }
@@ -78,8 +79,7 @@ impl ItemsCrawler<Store<Connection>> {
         let mut last_item_id = self.client.get_last_item().unwrap();
         let mut counter: u16 = 0;
         while (latest_item_id > last_item_id) && (counter < *MAX_BATCH_ITEMS) {
-            let res = self.fetch_item(last_item_id).unwrap();
-            let item  = Item::from(res.to_string());
+            let item = self.fetch_item(last_item_id).unwrap();
             self.client.store_item(item).unwrap();
             last_item_id += 1;
             counter += 1;
@@ -94,8 +94,7 @@ impl ItemsCrawler<Store<Connection>> {
         let mut counter = 0;
         let mut items: Vec<Item> = vec![];
         while (latest_item_id > last_item_id) && counter < (MAX_BATCH_ITEMS).clone() {
-            let res = self.fetch_item(last_item_id).unwrap();
-            let item  = Item::from(res.to_string());
+            let item= self.fetch_item(last_item_id).unwrap();
             items.push(item);
             last_item_id += 1;
             counter += 1;

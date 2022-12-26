@@ -40,6 +40,9 @@ fn main() {
                 "run_many" => {
                    crawler.run_many();
                 }
+                "sync_data" => {
+                    crawler.run_sync_data();
+                }
                 &_ => {
                     panic!("`run_type` {:?} is not supported for sqlite!", args.run_type);
                 }
