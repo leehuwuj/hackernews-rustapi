@@ -47,7 +47,7 @@ impl GenericStoreItem<Store<Connection>> for Store<Connection> {
         match statement.next().unwrap() {
             State::Row => {
                 let max_id = statement.read::<i64, _>("max_id").unwrap();
-                return Ok(max_id)
+                Ok(max_id)
             }
             State::Done => {Err(())}
         }
@@ -64,10 +64,10 @@ impl Store<Connection> {
         let batched_values = items.iter()
             .fold("".to_string(),
                 |i1, i2| 
-                format!("{},{}", i1.to_string(), i2.to_sql_value()))
+                format!("{},{}", i1, i2.to_sql_value()))
             .split_at(1).1 // Remove surplus of delimeters in the first time folding
             .to_string();
-        let sql = format!("INSERT INTO `items` VALUES {}", batched_values.to_string());
+        let sql = format!("INSERT INTO `items` VALUES {}", batched_values);
         self.backend_client.execute(sql).unwrap();
     }
 }
@@ -93,7 +93,7 @@ impl ItemsCrawler<Store<Connection>> {
         let mut last_item_id = self.client.get_last_item().unwrap();
         let mut counter = 0;
         let mut items: Vec<Item> = vec![];
-        while (latest_item_id > last_item_id) && counter < (MAX_BATCH_ITEMS).clone() {
+        while (latest_item_id > last_item_id) && (counter < MAX_BATCH_ITEMS.clone()) {
             let item= self.fetch_item(last_item_id).unwrap();
             items.push(item);
             last_item_id += 1;

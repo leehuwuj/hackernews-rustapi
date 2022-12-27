@@ -17,11 +17,10 @@ impl GenericStoreItem<Store<postgres::Client>> for Store<postgres::Client> {
     fn get_last_item(&mut self) -> Result<i64, ()> {
         println!("Getting last item from store...");
         let row = self.backend_client.query_one("select max(id) from items", &[]);
-        let result = match row {
+        match row {
             Ok(row) => Ok(row.get(0)),
             Err(_) => Err(())
-        };
-        result
+        }
     }
     fn store_item(&mut self, item: Item) -> Result<bool, ()> {
         let _ = item;

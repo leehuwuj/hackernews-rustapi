@@ -42,31 +42,33 @@ impl<StoreClient> ItemsCrawler<StoreClient> {
     pub fn fetch_items_async(&self, ids: Vec<i64>, rt: tokio::runtime::Runtime) -> Vec<Item> {
         let (s, r) = mpsc::channel();
         let ids_cnt = ids.len();
-        
-        for i in ids {
-            let sender = s.clone();
-            let hub = self.hub.clone();
-            rt.spawn(async move {
-                match hub.fetch_item_async(i).await {
-                    Ok(response) => {
-                        if response.len() < 10 {
-                            println!("invalid response");
-                            let _ = sender.send(None);
-                        } else {
-                            let item = Item::from(response);
-                            let _ = sender.send(Some(item));
+
+        ids.into_iter().for_each(|i| {
+            rt.spawn({
+                let sender = s.clone();
+                let hub = self.hub.clone();
+                async move {
+                    match hub.fetch_item_async(i).await {
+                        Ok(response) => {
+                            if response.len() < 10 {
+                                println!("invalid response");
+                                let _ = sender.send(None);
+                            } else {
+                                let item = Item::from(response);
+                                let _ = sender.send(Some(item));
+                            }
                         }
-                    }
-                    Err(_) => {
-                        let _ = sender.send(None);
+                        Err(_) => {
+                            let _ = sender.send(None);
+                        }
                     }
                 }
             });
-        }
+        });
 
         let mut res = vec![];
         for _ in 0..ids_cnt {
-            match r.recv_timeout(Duration::from_secs(5)) {
+            match r.recv_timeout(Duration::from_secs(50)) {
                 Ok(item) => {
                     if let Some(item) = item {
                         res.push(item);

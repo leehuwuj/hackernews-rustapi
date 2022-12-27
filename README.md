@@ -3,11 +3,11 @@
 - I reimplement the project to learn Rust.
 
 ## Todo:
-- [ ] Generic store
+- [x] Generic store
   - [x] Postgres
   - [x] Sqlite
-  - [ ] File
-- [ ] Asynchronous API
+  - [-] File
+- [x] Asynchronous API
 - [ ] Real-time event
 
 # How to?

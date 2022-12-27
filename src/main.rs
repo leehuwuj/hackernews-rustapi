@@ -28,10 +28,10 @@ struct Args {
 fn main() {
     let args = Args::parse();
     println!("{:?}", args);
-    let hub = NewsHub::new(&**CRAWLER_HUB);
+    let hub = NewsHub::new(&CRAWLER_HUB);
     match args.store.as_str() {
         "sqlite" => {
-            let store = Store::<sqlite::Connection>::new(&args.store_uri.trim());
+            let store = Store::<sqlite::Connection>::new(args.store_uri.trim());
             let mut crawler = ItemsCrawler::new(hub, store);
             match args.run_type.as_str() {
                 "run_one" => {

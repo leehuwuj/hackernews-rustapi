@@ -36,7 +36,7 @@ impl NewsHub {
     }
 
     fn fetch_res_by_uri(&self, query: &str) -> Result<String, reqwest::Error> {
-        self.blocking_fetch(&(self.base_uri.clone() + query))?.text()
+        self.blocking_fetch(self.base_uri.clone() + query)?.text()
     }
 
     async fn fetch_res_by_uri_async(&self, query: &str) -> Result<String, reqwest::Error> {
